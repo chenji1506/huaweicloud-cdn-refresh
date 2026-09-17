@@ -1,0 +1,10 @@
+# 编译产物
+huaweicloud-cdn-refresh
+huawei-cloud-cdn-refreshtasks*
+*.exe
+*.bin
+
+# 临时文件
+*.log
+*.tmp
+.DS_Store
