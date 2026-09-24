@@ -27,6 +27,15 @@ var (
 
 var token string
 
+func init() {
+	// 参数简写, 与长参数绑定同一变量
+	flag.StringVar(ak, "a", "", "-ak 的简写")
+	flag.StringVar(sk, "s", "", "-sk 的简写")
+	flag.StringVar(username, "u", "refresh_cdn", "-username 的简写")
+	flag.StringVar(password, "p", "G1pxvRkGt", "-password 的简写")
+	flag.StringVar(domain, "d", "default", "-domain 的简写")
+}
+
 func newClient() *http.Client {
 	return &http.Client{Timeout: 60 * time.Second}
 }
@@ -182,23 +191,30 @@ func main() {
 		out := flag.CommandLine.Output()
 		fmt.Fprintf(out, "华为云 CDN 缓存刷新工具 (cache refresh via cdn.myhwclouds.com)\n\n")
 		fmt.Fprintf(out, "用法: %s [参数]\n\n参数:\n", os.Args[0])
-		printFlag := func(name string) {
+		printFlag := func(name, short string) {
 			f := flag.Lookup(name)
+			label := "-" + f.Name
+			if short != "" {
+				label += ", -" + short
+			}
 			if f.DefValue != "" {
-				fmt.Fprintf(out, "  -%s\n    \t%s (默认 %q)\n", f.Name, f.Usage, f.DefValue)
+				fmt.Fprintf(out, "  %s\n    \t%s (默认 %q)\n", label, f.Usage, f.DefValue)
 			} else {
-				fmt.Fprintf(out, "  -%s\n    \t%s\n", f.Name, f.Usage)
+				fmt.Fprintf(out, "  %s\n    \t%s\n", label, f.Usage)
 			}
 		}
-		for _, name := range []string{"ak", "sk", "username", "password", "domain", "refreshtype", "refreurls"} {
-			printFlag(name)
+		for _, p := range [][2]string{
+			{"ak", "a"}, {"sk", "s"}, {"username", "u"}, {"password", "p"},
+			{"domain", "d"}, {"refreshtype", ""}, {"refreurls", ""},
+		} {
+			printFlag(p[0], p[1])
 		}
 		fmt.Fprintf(out, "\n示例:\n")
 		fmt.Fprintf(out, "  # 刷新单个文件\n  %s -refreshtype file -refreurls \"http://www.example.com/a.png\"\n", os.Args[0])
 		fmt.Fprintf(out, "  # 刷新多个文件\n  %s -refreshtype file -refreurls \"http://www.example.com/a.png,http://www.example.com/b.png\"\n", os.Args[0])
 		fmt.Fprintf(out, "  # 刷新目录\n  %s -refreshtype directory -refreurls \"http://www.example.com/dir/\"\n", os.Args[0])
-		fmt.Fprintf(out, "  # 指定账号和认证域 (Token 认证)\n  %s -username user1 -password pass1 -domain mydomain -refreshtype file -refreurls \"http://www.example.com/a.png\"\n", os.Args[0])
-		fmt.Fprintf(out, "  # 使用 AK/SK 签名认证 (无需用户名密码/Token)\n  %s -ak YOUR_AK -sk YOUR_SK -refreshtype file -refreurls \"http://www.example.com/a.png\"\n", os.Args[0])
+		fmt.Fprintf(out, "  # 指定账号和认证域 (Token 认证)\n  %s -u user1 -p pass1 -d mydomain -refreshtype file -refreurls \"http://www.example.com/a.png\"\n", os.Args[0])
+		fmt.Fprintf(out, "  # 使用 AK/SK 签名认证 (无需用户名密码/Token)\n  %s -a YOUR_AK -s YOUR_SK -refreshtype file -refreurls \"http://www.example.com/a.png\"\n", os.Args[0])
 	}
 	flag.Parse()
 	if *urls == "" {
